@@ -45,6 +45,11 @@ public class SecurityConfig {
                 .requestMatchers(new AntPathRequestMatcher("/api/users/**")).hasAuthority("ROLE_admin")
                 .requestMatchers(new AntPathRequestMatcher("/api/esg/submissions")).hasAnyAuthority("ROLE_admin", "ROLE_manager", "ROLE_representative")
                 .requestMatchers(new AntPathRequestMatcher("/api/esg/**")).hasAnyAuthority("ROLE_admin", "ROLE_manager")
+                // Swagger UI and OpenAPI endpoints
+                .requestMatchers(new AntPathRequestMatcher("/")).permitAll()
+                .requestMatchers(new AntPathRequestMatcher("/swagger-ui/**")).permitAll()
+                .requestMatchers(new AntPathRequestMatcher("/api-docs/**")).permitAll()
+                .requestMatchers(new AntPathRequestMatcher("/v3/api-docs/**")).permitAll()
                 .anyRequest().authenticated())
             .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

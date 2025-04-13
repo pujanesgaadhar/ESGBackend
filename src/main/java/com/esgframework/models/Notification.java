@@ -28,6 +28,9 @@ public class Notification {
 
     @Column(name = "is_read")
     private boolean read = false;
+    
+    @Column(name = "submission_id")
+    private Long submissionId;
 
     @CreationTimestamp
     @Column(name = "created_at")

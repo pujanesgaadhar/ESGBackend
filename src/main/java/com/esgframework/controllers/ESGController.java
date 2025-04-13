@@ -26,21 +26,27 @@ public class ESGController {
     }
 
     @GetMapping("/submissions")
-    @PreAuthorize("hasAnyRole('admin', 'manager')")
+    @PreAuthorize("hasRole('manager')")
     public ResponseEntity<List<ESGSubmission>> getESGSubmissions() {
         return ResponseEntity.ok(esgService.getESGSubmissions());
     }
 
-    @PutMapping("/{id}/review")
-    @PreAuthorize("hasAnyRole('admin', 'manager')")
+    @GetMapping("/submissions/{id}")
+    @PreAuthorize("hasRole('manager')")
+    public ResponseEntity<ESGSubmission> getSubmissionDetails(@PathVariable Long id) {
+        return ResponseEntity.ok(esgService.getSubmissionDetails(id));
+    }
+
+    @PutMapping("/submissions/{id}/review")
+    @PreAuthorize("hasRole('manager')")
     public ResponseEntity<ESGSubmission> reviewSubmission(
             @PathVariable Long id,
             @Valid @RequestBody ReviewRequest review) {
         return ResponseEntity.ok(esgService.reviewSubmission(id, review));
     }
 
-    @GetMapping("/history")
-    @PreAuthorize("hasAnyRole('admin', 'manager', 'company')")
+    @GetMapping("/submissions/history")
+    @PreAuthorize("hasAnyRole('manager', 'representative')")
     public ResponseEntity<List<ESGSubmission>> getSubmissionHistory() {
         return ResponseEntity.ok(esgService.getSubmissionHistory());
     }

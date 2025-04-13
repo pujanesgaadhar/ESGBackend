@@ -19,6 +19,7 @@ public class CompanyController {
     private CompanyService companyService;
 
     @GetMapping
+    @PreAuthorize("hasRole('admin')")
     public ResponseEntity<?> getCompanies() {
         try {
             List<Company> companies = companyService.getAllCompanies();

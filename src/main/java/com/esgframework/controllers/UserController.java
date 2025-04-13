@@ -49,7 +49,7 @@ public class UserController {
     }
 
     @GetMapping("/notifications")
-    @PreAuthorize("hasAnyRole('admin', 'manager', 'representative')")
+    @PreAuthorize("hasAnyRole('manager', 'representative')")
     public ResponseEntity<List<Notification>> getNotifications() {
         try {
             List<Notification> notifications = userService.getUserNotifications();
@@ -60,12 +60,36 @@ public class UserController {
         }
     }
 
-    @PutMapping("/notifications/{id}")
-    @PreAuthorize("hasAnyRole('admin', 'manager', 'representative')")
-    public ResponseEntity<Notification> markNotificationAsRead(@PathVariable Long id) {
+    @DeleteMapping("/notifications/{id}")
+    @PreAuthorize("hasAnyRole('manager', 'representative')")
+    public ResponseEntity<?> deleteNotification(@PathVariable Long id) {
         try {
-            Notification notification = userService.markNotificationAsRead(id);
-            return ResponseEntity.ok(notification);
+            userService.deleteNotification(id);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+    
+    @PutMapping("/notifications/{id}/read")
+    @PreAuthorize("hasAnyRole('manager', 'representative')")
+    public ResponseEntity<?> markNotificationRead(@PathVariable Long id) {
+        try {
+            userService.markNotificationAsRead(id);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+    
+    @DeleteMapping("/notifications/submission/{submissionId}")
+    @PreAuthorize("hasAnyRole('manager', 'representative')")
+    public ResponseEntity<?> deleteNotificationBySubmissionId(@PathVariable Long submissionId) {
+        try {
+            userService.deleteNotificationBySubmissionId(submissionId);
+            return ResponseEntity.ok().build();
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();

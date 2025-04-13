@@ -2,6 +2,7 @@ package com.esgframework.services;
 
 import com.esgframework.models.ESGSubmission;
 import com.esgframework.models.User;
+import com.esgframework.models.Company;
 import com.esgframework.dto.ReviewRequest;
 import com.esgframework.models.SubmissionStatus;
 import com.esgframework.models.Notification;
@@ -35,15 +36,29 @@ public class ESGService {
         submission.setSubmittedBy(currentUser);
         submission.setStatus(SubmissionStatus.PENDING);
 
-        // Create notification for managers
-        List<User> managers = userRepository.findByCompanyAndRole(currentUser.getCompany(), "ROLE_manager");
-        for (User manager : managers) {
-            Notification notification = new Notification();
-            notification.setUser(manager);
-            notification.setTitle("New ESG Submission requires review");
-            notification.setMessage("A new ESG submission from " + currentUser.getName() + " requires your review.");
-            notification.setCreatedAt(LocalDateTime.now());
-            notificationRepository.save(notification);
+        // Create notification for managers from the same company
+        Company submitterCompany = currentUser.getCompany();
+        if (submitterCompany != null) {
+            List<User> managers = userRepository.findByCompanyAndRole(submitterCompany, "manager");
+            for (User manager : managers) {
+                Notification notification = new Notification();
+                notification.setUser(manager);
+                LocalDateTime now = LocalDateTime.now();
+                String formattedTime = now.format(DateTimeFormatter.ofPattern("MMM dd, yyyy 'at' hh:mm a"));
+                notification.setTitle("New ESG Submission requires review");
+                notification.setMessage(String.format(
+                    "New ESG submission requires your review\n" +
+                    "Submitter: %s (%s)\n" +
+                    "Company: %s\n" +
+                    "Submitted on: %s",
+                    currentUser.getName(),
+                    currentUser.getEmail(),
+                    submitterCompany.getName(),
+                    formattedTime
+                ));
+                notification.setCreatedAt(now);
+                notificationRepository.save(notification);
+            }
         }
 
         return esgSubmissionRepository.save(submission);
@@ -51,11 +66,27 @@ public class ESGService {
 
     public List<ESGSubmission> getESGSubmissions() {
         User currentUser = getCurrentUser();
-        if (currentUser.getRole().equals("ROLE_manager")) {
-            return esgSubmissionRepository.findByCompany(currentUser.getCompany());
+        if (!currentUser.getRole().equalsIgnoreCase("manager")) {
+            throw new SecurityException("Only managers can view ESG submissions");
         }
-        // Admin can see all submissions
-        return esgSubmissionRepository.findAll();
+        return esgSubmissionRepository.findByCompany(currentUser.getCompany());
+    }
+
+    public ESGSubmission getSubmissionDetails(Long id) {
+        User currentUser = getCurrentUser();
+        if (!currentUser.getRole().equalsIgnoreCase("manager")) {
+            throw new SecurityException("Only managers can view ESG submission details");
+        }
+
+        ESGSubmission submission = esgSubmissionRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Submission not found with id: " + id));
+
+        // Verify the manager belongs to the same company as the submission
+        if (!submission.getCompany().getId().equals(currentUser.getCompany().getId())) {
+            throw new SecurityException("You can only view submissions from your own company");
+        }
+
+        return submission;
     }
 
     private User getCurrentUser() {
@@ -69,10 +100,19 @@ public class ESGService {
         ESGSubmission submission = esgSubmissionRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Submission not found with id: " + id));
 
-        // Verify that the manager belongs to the same company as the submission
-        if (currentUser.getRole().equals("ROLE_manager") && 
-            !submission.getCompany().getId().equals(currentUser.getCompany().getId())) {
-            throw new EntityNotFoundException("Submission not found with id: " + id);
+        // Verify reviewer's role and company access
+        String role = currentUser.getRole();
+        if (!role.equalsIgnoreCase("manager")) {
+            throw new SecurityException("Only managers can review submissions");
+        }
+        
+        // Verify they belong to the same company as the submission
+        Company managerCompany = currentUser.getCompany();
+        Company submissionCompany = submission.getCompany();
+        
+        if (managerCompany == null || submissionCompany == null || 
+            !managerCompany.getId().equals(submissionCompany.getId())) {
+            throw new SecurityException("You can only review submissions from your own company");
         }
 
         // Validate the status
@@ -81,21 +121,35 @@ public class ESGService {
             throw new IllegalArgumentException("Invalid status. Must be APPROVED or DENIED");
         }
 
+        LocalDateTime now = LocalDateTime.now();
+        String formattedTime = now.format(DateTimeFormatter.ofPattern("MMM dd, yyyy 'at' hh:mm a"));
+        
         submission.setStatus(review.getStatus());
         submission.setReviewComments(review.getComments());
         submission.setReviewedBy(currentUser);
-        submission.setReviewedAt(LocalDateTime.now());
+        submission.setReviewedAt(now);
 
         // Create notification for the submitter
         Notification notification = new Notification();
         notification.setUser(submission.getSubmittedBy());
         notification.setTitle("Your submission was " + review.getStatus().toString().toLowerCase());
-        String message = "Your ESG submission has been " + review.getStatus().toString().toLowerCase();
+        
+        String message = String.format(
+            "Your ESG submission has been %s\n" +
+            "Reviewed by: %s (%s)\n" +
+            "Review date: %s",
+            review.getStatus().toString().toLowerCase(),
+            currentUser.getName(),
+            currentUser.getEmail(),
+            formattedTime
+        );
+        
         if (review.getComments() != null && !review.getComments().isEmpty()) {
-            message += ". Comments: " + review.getComments();
+            message += "\nComments: " + review.getComments();
         }
+        
         notification.setMessage(message);
-        notification.setCreatedAt(LocalDateTime.now());
+        notification.setCreatedAt(now);
 
         notificationRepository.save(notification);
         return esgSubmissionRepository.save(submission);
@@ -107,7 +161,14 @@ public class ESGService {
     }
 
     public Map<String, Object> getChartData() {
-        List<ESGSubmission> approvedSubmissions = esgSubmissionRepository.findByStatus(SubmissionStatus.APPROVED);
+        User currentUser = getCurrentUser();
+        Company userCompany = currentUser.getCompany();
+        
+        // Get approved submissions for the user's company
+        List<ESGSubmission> approvedSubmissions = esgSubmissionRepository.findByCompanyAndStatus(
+            userCompany, 
+            SubmissionStatus.APPROVED
+        );
 
         // Sort submissions by date
         approvedSubmissions.sort(Comparator.comparing(ESGSubmission::getCreatedAt));
@@ -119,7 +180,11 @@ public class ESGService {
         List<Double> governanceScores = new ArrayList<>();
 
         for (ESGSubmission submission : approvedSubmissions) {
-            labels.add(submission.getCreatedAt().format(DateTimeFormatter.ofPattern("MMM dd")));
+            String dateLabel = submission.getCreatedAt().format(DateTimeFormatter.ofPattern("MMM dd"));
+            if (submission.getSubmittedBy() != null) {
+                dateLabel += " (" + submission.getSubmittedBy().getName() + ")";
+            }
+            labels.add(dateLabel);
             environmentalScores.add(submission.getEnvironmentalScore());
             socialScores.add(submission.getSocialScore());
             governanceScores.add(submission.getGovernanceScore());

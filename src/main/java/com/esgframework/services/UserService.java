@@ -38,14 +38,14 @@ public class UserService {
         List<Notification> notifications = notificationRepository.findByUserOrderByCreatedAtDesc(currentUser);
 
         // For representatives, only show review notifications
-        if (currentUser.getRole().equals("ROLE_representative")) {
+        if (currentUser.getRole().equalsIgnoreCase("REPRESENTATIVE")) {
             return notifications.stream()
                 .filter(n -> n.getTitle().startsWith("Your submission was"))
                 .collect(Collectors.toList());
         }
 
         // For managers, only show submission notifications
-        if (currentUser.getRole().equals("ROLE_manager")) {
+        if (currentUser.getRole().equalsIgnoreCase("MANAGER")) {
             return notifications.stream()
                 .filter(n -> n.getTitle().equals("New ESG Submission requires review"))
                 .collect(Collectors.toList());
@@ -55,13 +55,30 @@ public class UserService {
         return notifications;
     }
 
-    public Notification markNotificationAsRead(Long id) {
+    public void deleteNotification(Long id) {
+        User currentUser = getCurrentUser();
+        Notification notification = notificationRepository.findByIdAndUser(id, currentUser)
+            .orElseThrow(() -> new EntityNotFoundException("Notification not found"));
+        
+        notificationRepository.delete(notification);
+    }
+    
+    public void markNotificationAsRead(Long id) {
         User currentUser = getCurrentUser();
         Notification notification = notificationRepository.findByIdAndUser(id, currentUser)
             .orElseThrow(() -> new EntityNotFoundException("Notification not found"));
         
         notification.setRead(true);
-        return notificationRepository.save(notification);
+        notificationRepository.save(notification);
+    }
+    
+    public void deleteNotificationBySubmissionId(Long submissionId) {
+        User currentUser = getCurrentUser();
+        List<Notification> notifications = notificationRepository.findByUserAndSubmissionId(currentUser, submissionId);
+        
+        if (!notifications.isEmpty()) {
+            notificationRepository.deleteAll(notifications);
+        }
     }
 
     private User getCurrentUser() {
