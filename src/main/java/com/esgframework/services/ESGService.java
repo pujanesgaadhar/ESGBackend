@@ -69,7 +69,10 @@ public class ESGService {
         if (!currentUser.getRole().equalsIgnoreCase("manager")) {
             throw new SecurityException("Only managers can view ESG submissions");
         }
-        return esgSubmissionRepository.findByCompany(currentUser.getCompany());
+        // Fetch only PENDING submissions for manager review
+        List<ESGSubmission> pending = esgSubmissionRepository.findByCompanyAndStatus(currentUser.getCompany(), SubmissionStatus.PENDING);
+        pending.sort(Comparator.comparing(ESGSubmission::getCreatedAt).reversed());
+        return pending;
     }
 
     public ESGSubmission getSubmissionDetails(Long id) {
@@ -94,6 +97,8 @@ public class ESGService {
         return userRepository.findByEmail(email)
             .orElseThrow(() -> new EntityNotFoundException("User not found"));
     }
+
+
 
     public ESGSubmission reviewSubmission(Long id, ReviewRequest review) {
         User currentUser = getCurrentUser();
@@ -164,13 +169,11 @@ public class ESGService {
         User currentUser = getCurrentUser();
         Company userCompany = currentUser.getCompany();
         
-        // Get approved submissions for the user's company
+        // Only include APPROVED submissions for the user's company
         List<ESGSubmission> approvedSubmissions = esgSubmissionRepository.findByCompanyAndStatus(
             userCompany, 
             SubmissionStatus.APPROVED
         );
-
-        // Sort submissions by date
         approvedSubmissions.sort(Comparator.comparing(ESGSubmission::getCreatedAt));
 
         // Extract data for chart

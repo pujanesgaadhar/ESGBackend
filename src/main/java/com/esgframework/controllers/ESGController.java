@@ -45,6 +45,7 @@ public class ESGController {
         return ResponseEntity.ok(esgService.reviewSubmission(id, review));
     }
 
+
     @GetMapping("/submissions/history")
     @PreAuthorize("hasAnyRole('manager', 'representative')")
     public ResponseEntity<List<ESGSubmission>> getSubmissionHistory() {

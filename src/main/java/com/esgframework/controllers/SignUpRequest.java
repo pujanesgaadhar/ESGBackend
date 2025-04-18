@@ -17,6 +17,10 @@ public class SignUpRequest {
     @NotBlank
     private String role;
 
+    private String companyName;
+
+    private String companyIndustry;
+
     public String getName() {
         return name;
     }
@@ -47,5 +51,21 @@ public class SignUpRequest {
 
     public void setRole(String role) {
         this.role = role;
+    }
+
+    public String getCompanyName() {
+        return companyName;
+    }
+
+    public void setCompanyName(String companyName) {
+        this.companyName = companyName;
+    }
+
+    public String getCompanyIndustry() {
+        return companyIndustry;
+    }
+
+    public void setCompanyIndustry(String companyIndustry) {
+        this.companyIndustry = companyIndustry;
     }
 }
