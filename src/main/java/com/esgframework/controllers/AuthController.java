@@ -90,8 +90,9 @@ public class AuthController {
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
             String jwt = tokenProvider.generateToken(authentication);
+            System.out.println(jwt + "     Pujan Patel");
             logger.debug("Successfully generated JWT token for user: {}", loginRequest.getEmail());
-        
+       
             User user = userRepository.findByEmail(loginRequest.getEmail())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -114,6 +115,7 @@ public class AuthController {
                 userData.put("company", companyData);
             }
             
+            System.out.println("User logged in successfully: " + user.getEmail() + ", with role: " + role);
             Map<String, Object> response = new HashMap<>();
             response.put("token", jwt);
             response.put("user", userData);

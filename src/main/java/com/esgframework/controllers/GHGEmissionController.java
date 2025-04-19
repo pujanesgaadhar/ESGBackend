@@ -17,6 +17,12 @@ import org.slf4j.LoggerFactory;
 @RequestMapping("/api/ghg-emissions")
 @CrossOrigin(origins = "*")
 public class GHGEmissionController {
+    @GetMapping("/company/pending")
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('manager')")
+    public org.springframework.http.ResponseEntity<java.util.List<com.esgframework.models.GHGEmission>> getPendingGHGEmissionsForManager() {
+        java.util.List<com.esgframework.models.GHGEmission> emissions = ghgEmissionService.getPendingEmissionsForCompany();
+        return org.springframework.http.ResponseEntity.ok(emissions);
+    }
     private static final Logger logger = LoggerFactory.getLogger(GHGEmissionController.class);
     @Autowired
     private GHGEmissionService ghgEmissionService;

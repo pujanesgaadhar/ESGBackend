@@ -20,6 +20,7 @@ import java.util.*;
 
 @Service
 public class ESGService {
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ESGService.class);
 
     @Autowired
     private ESGSubmissionRepository esgSubmissionRepository;
@@ -31,6 +32,7 @@ public class ESGService {
     private NotificationRepository notificationRepository;
 
     public ESGSubmission submitESGData(ESGSubmission submission) {
+    logger.info("Submitting ESG data for user: {} (company: {})", getCurrentUser().getName(), getCurrentUser().getCompany().getName());
         User currentUser = getCurrentUser();
         submission.setCompany(currentUser.getCompany());
         submission.setSubmittedBy(currentUser);
@@ -65,14 +67,16 @@ public class ESGService {
     }
 
     public List<ESGSubmission> getESGSubmissions() {
+    logger.info("Fetching pending ESG submissions for manager: {}", getCurrentUser().getName());
         User currentUser = getCurrentUser();
         if (!currentUser.getRole().equalsIgnoreCase("manager")) {
             throw new SecurityException("Only managers can view ESG submissions");
         }
-        // Fetch only PENDING submissions for manager review
-        List<ESGSubmission> pending = esgSubmissionRepository.findByCompanyAndStatus(currentUser.getCompany(), SubmissionStatus.PENDING);
-        pending.sort(Comparator.comparing(ESGSubmission::getCreatedAt).reversed());
-        return pending;
+        // Fetch only PENDING GHG submissions for manager review
+    List<ESGSubmission> pending = esgSubmissionRepository.findByCompanyAndStatusAndSubmissionType(currentUser.getCompany(), SubmissionStatus.PENDING, "GHG");
+    pending.sort(Comparator.comparing(ESGSubmission::getCreatedAt).reversed());
+    logger.info("Found {} pending GHG submissions", pending.size());
+    return pending;
     }
 
     public ESGSubmission getSubmissionDetails(Long id) {
@@ -101,6 +105,8 @@ public class ESGService {
 
 
     public ESGSubmission reviewSubmission(Long id, ReviewRequest review) {
+    logger.info("Reviewing submission ID: {} by manager: {} with status: {}", id, getCurrentUser().getName(), review.getStatus());
+    try {
         User currentUser = getCurrentUser();
         ESGSubmission submission = esgSubmissionRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Submission not found with id: " + id));
@@ -152,17 +158,30 @@ public class ESGService {
         if (review.getComments() != null && !review.getComments().isEmpty()) {
             message += "\nComments: " + review.getComments();
         }
-        
         notification.setMessage(message);
         notification.setCreatedAt(now);
-
         notificationRepository.save(notification);
-        return esgSubmissionRepository.save(submission);
+        logger.info("Notification created for submitter: {} (company: {}) for submission ID: {}", submission.getSubmittedBy().getName(), submission.getSubmittedBy().getCompany().getName(), submission.getId());
+        ESGSubmission saved = esgSubmissionRepository.save(submission);
+        logger.info("Submission ID: {} reviewed and saved with status: {}", saved.getId(), review.getStatus());
+        return saved;
+    } catch (Exception e) {
+        logger.error("Error reviewing submission: {}", e.getMessage());
+        throw e;
     }
+}
 
     public List<ESGSubmission> getSubmissionHistory() {
-        User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return esgSubmissionRepository.findBySubmittedByOrderByCreatedAtDesc(currentUser);
+        logger.info("Fetching submission history for user: {}", getCurrentUser().getName());
+        try {
+            User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            return esgSubmissionRepository.findBySubmittedByOrderByCreatedAtDesc(currentUser);
+        } catch (Exception e) {
+            logger.error("Error fetching submission history: {}", e.getMessage());
+            throw e;
+        } finally {
+            logger.info("Submission history fetched");
+        }
     }
 
     public Map<String, Object> getChartData() {

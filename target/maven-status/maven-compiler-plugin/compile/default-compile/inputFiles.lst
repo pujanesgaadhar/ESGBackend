@@ -30,6 +30,7 @@
 /Users/pujanpatel/CascadeProjects/esgworkspace/ESGBackend/src/main/java/com/esgframework/controllers/AuthController.java
 /Users/pujanpatel/CascadeProjects/esgworkspace/ESGBackend/src/main/java/com/esgframework/services/CompanyService.java
 /Users/pujanpatel/CascadeProjects/esgworkspace/ESGBackend/src/main/java/com/esgframework/controllers/GHGEmissionController.java
+/Users/pujanpatel/CascadeProjects/esgworkspace/ESGBackend/src/main/java/com/esgframework/config/JwtConfig.java
 /Users/pujanpatel/CascadeProjects/esgworkspace/ESGBackend/src/main/java/com/esgframework/services/GHGEmissionService.java
 /Users/pujanpatel/CascadeProjects/esgworkspace/ESGBackend/src/main/java/com/esgframework/utils/PasswordHashGenerator.java
 /Users/pujanpatel/CascadeProjects/esgworkspace/ESGBackend/src/main/java/com/esgframework/repositories/GHGEmissionRepository.java

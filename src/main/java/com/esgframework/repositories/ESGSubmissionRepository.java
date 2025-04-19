@@ -12,4 +12,5 @@ public interface ESGSubmissionRepository extends JpaRepository<ESGSubmission, Lo
     List<ESGSubmission> findBySubmittedByOrderByCreatedAtDesc(User submittedBy);
     List<ESGSubmission> findByCompany(Company company);
     List<ESGSubmission> findByCompanyAndStatus(Company company, SubmissionStatus status);
+    List<ESGSubmission> findByCompanyAndStatusAndSubmissionType(Company company, SubmissionStatus status, String submissionType);
 }

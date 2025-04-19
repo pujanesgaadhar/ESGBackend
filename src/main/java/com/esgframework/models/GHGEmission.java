@@ -6,6 +6,9 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "ghg_emissions")
 public class GHGEmission {
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private SubmissionStatus status = SubmissionStatus.PENDING;
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -83,4 +86,12 @@ public class GHGEmission {
 
     public String getNotes() { return notes; }
     public void setNotes(String notes) { this.notes = notes; }
+
+    public SubmissionStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(SubmissionStatus status) {
+        this.status = status;
+    }
 }
