@@ -100,7 +100,9 @@ public class SecurityConfig {
             "http://localhost:3000",
             "http://localhost:5173",
             "http://frontend:3000",
-            "http://esgaadhar-frontend:3000"
+            "http://esgaadhar-frontend:3000",
+            "https://dashboard.esgaadhar.com",
+            "https://api.esgaadhar.com"
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(Arrays.asList(
