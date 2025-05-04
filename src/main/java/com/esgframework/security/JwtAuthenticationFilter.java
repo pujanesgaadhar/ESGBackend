@@ -52,9 +52,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private String getJwtFromRequest(HttpServletRequest request) {
-        String bearerToken = request.getHeader("Authorization");
-        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
-            return bearerToken.substring(7);
+        String token = request.getHeader("Authorization");
+        if (StringUtils.hasText(token)) {
+            // Handle both cases: with or without 'Bearer ' prefix
+            if (token.startsWith("Bearer ")) {
+                return token.substring(7);
+            }
+            // Return the token as is if it doesn't have the Bearer prefix
+            return token;
         }
         return null;
     }
