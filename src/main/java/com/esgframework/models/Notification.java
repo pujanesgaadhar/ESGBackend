@@ -5,12 +5,19 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 
 import javax.persistence.*;
+import javax.persistence.Index;
 import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor
 @Entity
-@Table(name = "notifications")
+@Table(name = "notifications", indexes = {
+    @Index(name = "idx_notification_user", columnList = "user_id"),
+    @Index(name = "idx_notification_read", columnList = "is_read"),
+    @Index(name = "idx_notification_submission", columnList = "submission_id"),
+    @Index(name = "idx_notification_type", columnList = "type"),
+    @Index(name = "idx_notification_created", columnList = "created_at")
+})
 public class Notification {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,6 +38,9 @@ public class Notification {
     
     @Column(name = "submission_id")
     private Long submissionId;
+    
+    @Column(name = "type")
+    private String type;
 
     @CreationTimestamp
     @Column(name = "created_at")

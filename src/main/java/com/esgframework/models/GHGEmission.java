@@ -1,10 +1,19 @@
 package com.esgframework.models;
 
 import javax.persistence.*;
+import javax.persistence.Index;
 import java.time.LocalDateTime;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 @Entity
-@Table(name = "ghg_emissions")
+@Table(name = "ghg_emissions", indexes = {
+    @Index(name = "idx_ghg_company", columnList = "company_id"),
+    @Index(name = "idx_ghg_status", columnList = "status"),
+    @Index(name = "idx_ghg_scope", columnList = "scope"),
+    @Index(name = "idx_ghg_dates", columnList = "start_date, end_date"),
+    @Index(name = "idx_ghg_submitter", columnList = "submitted_by_id")
+})
 public class GHGEmission {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
@@ -17,6 +26,10 @@ public class GHGEmission {
     @JoinColumn(name = "company_id", nullable = false)
     private Company company;
 
+    @ManyToOne
+    @JoinColumn(name = "submitted_by_id")
+    private User submittedBy;
+
     @Enumerated(EnumType.STRING)
     private EmissionScope scope;
 
@@ -26,7 +39,10 @@ public class GHGEmission {
     @Enumerated(EnumType.STRING)
     private TimeFrame timeFrame;
 
+    @Column(name = "start_date")
     private LocalDateTime startDate;
+    
+    @Column(name = "end_date")
     private LocalDateTime endDate;
     private Double quantity;
     private String unit;
@@ -37,6 +53,18 @@ public class GHGEmission {
     private String emissionFactorUnit;
     private LocalDateTime submissionDate;
     private String notes;
+    
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
+    
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+    
+    @ManyToOne
+    @JoinColumn(name = "last_modified_by_id")
+    private User lastModifiedBy;
 
     // Getters and Setters
     public Long getId() { return id; }
@@ -93,5 +121,37 @@ public class GHGEmission {
 
     public void setStatus(SubmissionStatus status) {
         this.status = status;
+    }
+    
+    public User getSubmittedBy() {
+        return submittedBy;
+    }
+    
+    public void setSubmittedBy(User submittedBy) {
+        this.submittedBy = submittedBy;
+    }
+    
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+    
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+    
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+    
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+    
+    public User getLastModifiedBy() {
+        return lastModifiedBy;
+    }
+    
+    public void setLastModifiedBy(User lastModifiedBy) {
+        this.lastModifiedBy = lastModifiedBy;
     }
 }

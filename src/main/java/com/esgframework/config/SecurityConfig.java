@@ -46,6 +46,8 @@ public class SecurityConfig {
                 .requestMatchers(new AntPathRequestMatcher("/api/users/**")).hasAuthority("ROLE_admin")
                 .requestMatchers(new AntPathRequestMatcher("/api/esg/submissions")).hasAnyAuthority("ROLE_admin", "ROLE_manager", "ROLE_representative")
                 .requestMatchers(new AntPathRequestMatcher("/api/esg/**")).hasAnyAuthority("ROLE_admin", "ROLE_manager")
+                .requestMatchers(new AntPathRequestMatcher("/api/ghg-emissions")).hasAnyAuthority("ROLE_admin", "ROLE_manager", "ROLE_representative")
+                .requestMatchers(new AntPathRequestMatcher("/api/ghg-emissions/**")).hasAnyAuthority("ROLE_admin", "ROLE_manager", "ROLE_representative")
                 // Swagger UI and OpenAPI endpoints
                 .requestMatchers(new AntPathRequestMatcher("/")).permitAll()
                 .requestMatchers(new AntPathRequestMatcher("/swagger-ui/**")).permitAll()

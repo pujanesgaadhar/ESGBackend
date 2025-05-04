@@ -4,5 +4,6 @@ public enum TimeFrame {
     DAILY,
     WEEKLY,
     MONTHLY,
-    YEARLY
+    YEARLY,
+    CUSTOM  // For custom date ranges
 }

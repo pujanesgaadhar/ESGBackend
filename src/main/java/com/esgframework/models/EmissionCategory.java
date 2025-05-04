@@ -27,5 +27,15 @@ public enum EmissionCategory {
     PROCESSING_SOLD_PRODUCTS,
     USE_OF_SOLD_PRODUCTS,
     END_OF_LIFE_PRODUCTS,
-    FRANCHISES
+    FRANCHISES,
+    
+    // Solvent Categories
+    SOLVENT_CONSUMPTION,
+    SOLVENT_RECOVERY,
+    SOLVENT_LOSS,
+    
+    // Sink Categories
+    REFORESTATION,
+    AFFORESTATION,
+    SOIL_CARBON_SEQUESTRATION
 }

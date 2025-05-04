@@ -48,7 +48,7 @@ public class UserController {
         }
     }
 
-    @GetMapping("/notifications")
+    @GetMapping("/my-notifications")
     @PreAuthorize("hasAnyRole('manager', 'representative')")
     public ResponseEntity<List<Notification>> getNotifications() {
         try {
@@ -60,7 +60,7 @@ public class UserController {
         }
     }
 
-    @DeleteMapping("/notifications/{id}")
+    @DeleteMapping("/my-notifications/{id}")
     @PreAuthorize("hasAnyRole('manager', 'representative')")
     public ResponseEntity<?> deleteNotification(@PathVariable Long id) {
         try {
@@ -72,7 +72,7 @@ public class UserController {
         }
     }
     
-    @PutMapping("/notifications/{id}/read")
+    @PutMapping("/my-notifications/{id}/read")
     @PreAuthorize("hasAnyRole('manager', 'representative')")
     public ResponseEntity<?> markNotificationRead(@PathVariable Long id) {
         try {
@@ -84,7 +84,7 @@ public class UserController {
         }
     }
     
-    @DeleteMapping("/notifications/submission/{submissionId}")
+    @DeleteMapping("/my-notifications/submission/{submissionId}")
     @PreAuthorize("hasAnyRole('manager', 'representative')")
     public ResponseEntity<?> deleteNotificationBySubmissionId(@PathVariable Long submissionId) {
         try {

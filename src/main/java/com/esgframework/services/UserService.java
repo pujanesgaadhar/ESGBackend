@@ -32,23 +32,24 @@ public class UserService {
     public User findByEmail(String email) {
         return userRepository.findByEmail(email).orElse(null);
     }
+    
+    // Note: We use email as username in this application, so findByEmail is used instead
 
     public List<Notification> getUserNotifications() {
         User currentUser = getCurrentUser();
         List<Notification> notifications = notificationRepository.findByUserOrderByCreatedAtDesc(currentUser);
 
-        // For representatives, only show review notifications
+        // For representatives, show all notifications related to their submissions
         if (currentUser.getRole().equalsIgnoreCase("REPRESENTATIVE")) {
             return notifications.stream()
-                .filter(n -> n.getTitle().startsWith("Your submission was"))
+                .filter(n -> n.getTitle().startsWith("Your"))
                 .collect(Collectors.toList());
         }
 
-        // For managers, only show submission notifications
+        // For managers, show all GHG emission notifications
         if (currentUser.getRole().equalsIgnoreCase("MANAGER")) {
-            return notifications.stream()
-                .filter(n -> n.getTitle().equals("New ESG Submission requires review"))
-                .collect(Collectors.toList());
+            // Return all notifications for managers - they need to see all GHG submissions
+            return notifications;
         }
 
         // Admins can see all notifications

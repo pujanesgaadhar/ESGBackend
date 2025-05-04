@@ -33,7 +33,15 @@ public class Company {
 
     @OneToMany(mappedBy = "company")
     @JsonIgnore
-    private List<ESGSubmission> submissions;
+    private List<GHGEmission> ghgEmissions;
+    
+    @OneToMany(mappedBy = "company")
+    @JsonIgnore
+    private List<SocialMetric> socialMetrics;
+    
+    @OneToMany(mappedBy = "company")
+    @JsonIgnore
+    private List<GovernanceMetric> governanceMetrics;
 
     @CreationTimestamp
     @Column(name = "created_at")
@@ -88,12 +96,28 @@ public class Company {
         this.users = users;
     }
 
-    public List<ESGSubmission> getSubmissions() {
-        return submissions;
+    public List<GHGEmission> getGhgEmissions() {
+        return ghgEmissions;
     }
 
-    public void setSubmissions(List<ESGSubmission> submissions) {
-        this.submissions = submissions;
+    public void setGhgEmissions(List<GHGEmission> ghgEmissions) {
+        this.ghgEmissions = ghgEmissions;
+    }
+    
+    public List<SocialMetric> getSocialMetrics() {
+        return socialMetrics;
+    }
+
+    public void setSocialMetrics(List<SocialMetric> socialMetrics) {
+        this.socialMetrics = socialMetrics;
+    }
+    
+    public List<GovernanceMetric> getGovernanceMetrics() {
+        return governanceMetrics;
+    }
+
+    public void setGovernanceMetrics(List<GovernanceMetric> governanceMetrics) {
+        this.governanceMetrics = governanceMetrics;
     }
 
     public LocalDateTime getCreatedAt() {
