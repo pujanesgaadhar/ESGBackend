@@ -153,34 +153,74 @@ public class GHGEmissionController {
             @RequestParam("companyId") Long companyId) {
         
         logger.info("Received CSV upload request for scope: {} and company ID: {}", scopeStr, companyId);
+        logger.info("File name: {}, size: {} bytes", file.getOriginalFilename(), file.getSize());
         
         if (file.isEmpty()) {
+            logger.warn("Empty file uploaded");
             return ResponseEntity.badRequest().body(Map.of("error", "Please upload a CSV file"));
         }
         
         if (!file.getOriginalFilename().endsWith(".csv")) {
+            logger.warn("Non-CSV file uploaded: {}", file.getOriginalFilename());
             return ResponseEntity.badRequest().body(Map.of("error", "Only CSV files are allowed"));
         }
         
         try {
-            EmissionScope scope = EmissionScope.valueOf(scopeStr);
-            int recordsProcessed = csvService.processCSVFile(file, scope, companyId);
+            // Validate scope parameter
+            if (scopeStr == null || scopeStr.trim().isEmpty()) {
+                logger.error("Scope parameter is missing or empty");
+                return ResponseEntity.badRequest().body(Map.of("error", "Scope parameter is required"));
+            }
             
-            Map<String, Object> response = new HashMap<>();
-            response.put("message", "CSV file processed successfully");
-            response.put("recordsProcessed", recordsProcessed);
-            response.put("scope", scope.name());
+            // Validate company ID
+            if (companyId == null) {
+                logger.error("Company ID parameter is missing");
+                return ResponseEntity.badRequest().body(Map.of("error", "Company ID parameter is required"));
+            }
             
-            return ResponseEntity.ok(response);
-        } catch (IllegalArgumentException e) {
-            logger.error("Invalid scope value: {}", scopeStr, e);
-            return ResponseEntity.badRequest().body(Map.of("error", "Invalid scope value"));
+            // Try to parse the scope
+            EmissionScope scope;
+            try {
+                scope = EmissionScope.valueOf(scopeStr.toUpperCase());
+                logger.info("Parsed scope: {}", scope);
+            } catch (IllegalArgumentException e) {
+                logger.error("Invalid scope value: {}", scopeStr, e);
+                return ResponseEntity.badRequest().body(Map.of(
+                    "error", "Invalid scope value", 
+                    "message", "Valid scopes are: " + java.util.Arrays.toString(EmissionScope.values())
+                ));
+            }
+            
+            // Process the CSV file
+            try {
+                int recordsProcessed = csvService.processCSVFile(file, scope, companyId);
+                
+                Map<String, Object> response = new HashMap<>();
+                response.put("message", "CSV file processed successfully");
+                response.put("recordsProcessed", recordsProcessed);
+                response.put("scope", scope.name());
+                
+                logger.info("CSV file processed successfully. Records processed: {}", recordsProcessed);
+                return ResponseEntity.ok(response);
+            } catch (Exception e) {
+                logger.error("Error in CSV processing: {}", e.getMessage(), e);
+                return ResponseEntity.status(500).body(Map.of(
+                    "error", "Failed to process CSV file",
+                    "message", e.getMessage(),
+                    "details", e.getClass().getName(),
+                    "stackTrace", e.getStackTrace()[0].toString()
+                ));
+            }
         } catch (Exception e) {
-            logger.error("Error processing CSV file: {}", e.getMessage(), e);
+            logger.error("Unexpected error processing CSV file: {}", e.getMessage(), e);
             return ResponseEntity.status(500).body(Map.of(
                 "error", "Failed to process CSV file",
                 "message", e.getMessage(),
-                "details", e.getClass().getName()
+                "details", e.getClass().getName(),
+                "stackTrace", java.util.Arrays.stream(e.getStackTrace())
+                    .limit(5)
+                    .map(StackTraceElement::toString)
+                    .collect(java.util.stream.Collectors.joining("\n"))
             ));
         }
     }
